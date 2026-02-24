@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: mean-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mean-frontend
+  template:
+    metadata:
+      labels:
+        app: mean-frontend
+    spec:
+      containers:
+      - name: frontend
+        # Update with your DockerHub repository
+        image: yourdockerhub/mean-frontend:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: LoadBalancer
+  selector:
+    app: mean-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

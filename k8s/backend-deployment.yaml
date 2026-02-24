@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: mean-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mean-backend
+  template:
+    metadata:
+      labels:
+        app: mean-backend
+    spec:
+      containers:
+      - name: backend
+        # Update with your DockerHub repository
+        image: yourdockerhub/mean-backend:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MONGO_URL
+          # Points to the 'mongo' service name
+          value: "mongodb://mongo:27017/dd_db"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector:
+    app: mean-backend
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
