@@ -1,101 +1,68 @@
-# MEAN Stack Application
+# MEAN Stack Application - Deployment and CI/CD Setup
 
-This repository contains a full-stack **MEAN** (MongoDB, Express.js, Angular, Node.js) application. 
+## Project Overview
+This repository contains the containerized setup and deployment configuration for a full-stack MEAN (MongoDB, Express.js, Angular, Node.js) application. The project demonstrates hands-on implementation of Docker containerization, cloud deployment on AWS EC2, Nginx reverse proxy routing, and an automated CI/CD pipeline using GitHub Actions.
 
-This guide serves as a step-by-step tutorial on how to host the frontend and backend of this application on **AWS (Amazon Web Services)**.
+**Live Application URL:** http://3.110.142.35
+**GitHub Repository:** https://github.com/Jaishankar7655/mean-stack-git-actions.git
 
-## Project Structure Overview
-- **`frontend/`**: The Angular application.
-  - *Note on API Calls*: In `frontend/src/app/services/tutorial.service.ts`, the `baseUrl` is set to `'/api/tutorials'`. This relative path is ideal because the Nginx reverse proxy (configured in `frontend/nginx.conf`) captures any request to `/api/` and automatically forwards it to the backend Node.js server.
-- **`backend/`**: The Node.js and Express backend REST API.
-- **`docker-compose.yml`**: Docker orchestration file to spin up MongoDB, the backend, and the frontend via Nginx.
+## Architecture and Infrastructure
+* **Frontend:** Angular 15 application (Containerized using Node 18, served via Nginx on port 80).
+* **Backend:** Node.js API with Express.js (Containerized using Node 18 Alpine, running on port 8080).
+* **Database:** MongoDB (Running as a Docker container).
+* **Cloud Provider:** AWS EC2 (Ubuntu 22.04 LTS).
+* **CI/CD:** GitHub Actions.
+* **Orchestration:** Docker Compose.
 
----
+## 1. Containerization
+The application is fully containerized using Docker.
+* **Frontend Dockerfile:** Uses a multi-stage build. It first compiles the Angular application using the Angular CLI and then serves the compiled static files using an Nginx Alpine container.
+* **Backend Dockerfile:** Copies the Node.js source code, installs dependencies, and exposes port 8080.
+* **Docker Compose (`docker-compose.yml`):** Orchestrates three services: `mongo`, `backend`, and `frontend`. They communicate over a custom bridge network (`mean-network`).
 
-## 🚀 Step-by-Step Guide: Hosting on AWS EC2
+## 2. Nginx Reverse Proxy
+Nginx is utilized as a reverse proxy to route traffic seamlessly on port 80 without requiring the user to specify backend ports.
+* Requests to the root `/` are served by the compiled Angular frontend.
+* Requests starting with `/api/` are intercepted by Nginx and proxy-passed to the underlying `backend` container on port 8080 (`proxy_pass http://backend:8080/api/;`).
 
-### Step 1: Launch an AWS EC2 Instance
-1. Log in to your **AWS Management Console** and navigate to **EC2**.
-2. Click **Launch Instance**.
-3. **Name**: Give your instance a name, e.g., `MEAN-App-Production`.
-4. **AMI**: Choose **Ubuntu Server 22.04 LTS**.
-5. **Instance Type**: Select `t2.micro` (eligible for AWS Free Tier) or `t3.micro`.
-6. **Key Pair**: Create a new key pair (e.g., `aws-key.pem`), download it, and keep it secure. You will need this to access the server.
-7. **Network Settings**:
-   - Check **Allow SSH traffic** from **Anywhere**.
-   - Check **Allow HTTP traffic from the internet** (crucial for accessing the app publicly).
-   - Check **Allow HTTPS traffic from the internet** (if you plan to add an SSL certificate later).
-8. Click **Launch Instance**.
+## 3. Automated CI/CD Pipeline (GitHub Actions)
+The repository uses a GitHub Actions workflow (`.github/workflows/main.yml`) to achieve continuous integration and continuous deployment.
 
-### Step 2: Connect to Your EC2 Instance
-1. Wait a moment for your EC2 instance "Instance State" to show as **Running**.
-2. Identify the **Public IPv4 address** of your instance.
-3. Open a terminal on your computer and set proper permissions on your downloaded key:
+### Pipeline Workflow:
+1. **Trigger:** The pipeline is triggered automatically on every push to the `main` branch.
+2. **Build and Push:** It uses Docker Buildx to build fresh Docker images for the frontend and backend. It then authenticates with Docker Hub and pushes the newly tagged images.
+3. **Continuous Deployment (SSH):** The pipeline uses `appleboy/ssh-action` to securely connect to the AWS EC2 instance (IP: 3.110.142.35).
+4. **Restart Containers:** Once connected to the EC2 server, it navigates to the project directory, pulls the latest Docker images from Docker Hub, and runs `docker-compose up -d --build` to restart the architecture with zero manual intervention.
+
+## 4. Manual Deployment Instructions
+If deploying to a fresh server manually, follow these steps:
+
+1. Clone the repository on the server:
    ```bash
-   chmod 400 aws-key.pem
+   git clone https://github.com/Jaishankar7655/mean-stack-git-actions.git
+   cd mean-stack-git-actions
    ```
-4. SSH into the Ubuntu server:
+2. Ensure Docker and Docker Compose are installed on the machine.
+3. Start the application:
    ```bash
-   ssh -i "aws-key.pem" ubuntu@<YOUR_EC2_PUBLIC_IP>
+   docker-compose up -d --build
    ```
+4. Access the application on port 80 via the server's public IP address.
 
-### Step 3: Install Docker and Docker Compose
-Once you are logged into the EC2 instance, run the following commands to install Docker, which is the easiest way to host both the frontend and backend consistently:
+## Evidence & Screenshots
 
-```bash
-# 1. Update package lists
-sudo apt-get update -y
+### 1. CI/CD Configuration and Execution
+*(Please attach a screenshot of your successful GitHub Actions pipeline run here)*
+![CI/CD Pipeline](screenshots/cicd_pipeline.png)
 
-# 2. Install Docker
-sudo apt-get install docker.io -y
+### 2. Docker Image Build and Push Process
+*(Please attach a screenshot of your Docker Hub repository displaying the pushed images here)*
+![Docker Hub](screenshots/docker_hub.png)
 
-# 3. Install Docker Compose
-sudo apt-get install docker-compose -y
+### 3. Application Deployment and Working UI
+*(Please attach a screenshot of the Angular frontend working in the browser at http://3.110.142.35 here)*
+![Working UI](screenshots/working_ui.png)
 
-# 4. Enable and Start Docker
-sudo systemctl enable docker
-sudo systemctl start docker
-
-# 5. Give your 'ubuntu' user permission to run Docker commands
-sudo usermod -aG docker ubuntu
-```
-*Note: To apply the user permission change, type `exit` to disconnect from SSH, then connect again.*
-
-### Step 4: Clone the Repository to the Server
-Retrieve your application code on the server:
-
-```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd crud-dd-task-mean-app
-```
-
-### Step 5: Start the Application Services
-Thanks to the pre-configured `docker-compose.yml`, starting the entire stack (MongoDB, Backend Node.js API, and Frontend Angular + Nginx) requires just one command.
-
-```bash
-docker-compose up -d --build
-```
-- `-d`: Runs the containers in detached mode (background).
-- `--build`: Ensures the latest Docker images are built for your frontend and backend.
-
-### Step 6: Access the Application!
-Open your web browser and navigate directly to your instance's IP:
-```
-http://<YOUR_EC2_PUBLIC_IP>
-```
-Your frontend should load correctly. Since the Nginx configuration maps `/api/` traffic directly to the backend container, the `baseUrl = '/api/tutorials'` setting from your `tutorial.service.ts` will work perfectly! API requests made by the frontend will hit Nginx (on port 80), which silently forwards them to the Node.js backend (on port 8080).
-
----
-
-## 🔄 Step 7 (Optional): Automated CI/CD Setup with GitHub Actions
-If you want updates pushed to your `main` branch to deploy automatically to your AWS EC2 instance:
-1. Go to your GitHub Repository -> **Settings** -> **Secrets and variables** -> **Actions** -> **New repository secret**.
-2. Add the following secrets:
-   - `DOCKER_USERNAME`: Your Docker Hub username.
-   - `DOCKER_PASSWORD`: Your Docker Hub password or access token.
-   - `VM_HOST`: The Public IP address of your EC2 instance.
-   - `VM_USER`: `ubuntu`
-   - `SSH_PRIVATE_KEY`: Paste the entire content of your `aws-key.pem` file.
-   
-Now, every time you `git push`, GitHub Actions will build the images, push them to Docker Hub, SSH into your AWS EC2 instance, pull the latest images, and restart the containers
-
+### 4. Nginx Setup and Infrastructure Details
+*(Please attach a screenshot of your EC2 instance details showing the IP or the Nginx configuration here)*
+![Infrastructure](screenshots/infrastructure.png)
