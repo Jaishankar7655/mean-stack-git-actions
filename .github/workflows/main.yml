@@ -48,6 +48,6 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/crud-dd-task-mean-app
+            cd ~/mean-stack-git-actions
             docker-compose pull
             docker-compose up -d --build
