@@ -52,17 +52,19 @@ If deploying to a fresh server manually, follow these steps:
 ## Evidence & Screenshots
 
 ### 1. CI/CD Configuration and Execution
-*(Please attach a screenshot of your successful GitHub Actions pipeline run here)*
-![CI/CD Pipeline](screenshots/cicd_pipeline.png)
+![CI/CD Pipeline](screenshots/allworkflow.png)
 
 ### 2. Docker Image Build and Push Process
-*(Please attach a screenshot of your Docker Hub repository displaying the pushed images here)*
-![Docker Hub](screenshots/docker_hub.png)
+![Docker Hub](screenshots/docker-hub.png)
 
 ### 3. Application Deployment and Working UI
-*(Please attach a screenshot of the Angular frontend working in the browser at http://3.110.142.35 here)*
-![Working UI](screenshots/working_ui.png)
+![Working UI](screenshots/main-ui-of-site.png)
 
 ### 4. Nginx Setup and Infrastructure Details
-*(Please attach a screenshot of your EC2 instance details showing the IP or the Nginx configuration here)*
-![Infrastructure](screenshots/infrastructure.png)
+![Infrastructure](screenshots/ec2-alarm-status.png)
+
+### 5. API Response Data
+![API Content](screenshots/Api-jason-image.png)
+
+### 6. Application Performance Details
+![Performance](screenshots/performance.png)
