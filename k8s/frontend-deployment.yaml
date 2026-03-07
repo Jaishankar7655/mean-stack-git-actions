@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        # Update with your DockerHub repository
+      
         image: jaishankar7655/mean-frontend:latest
         ports:
         - containerPort: 80
